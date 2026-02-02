@@ -41,6 +41,14 @@ Once activated, the plugin will automatically generate 3 dummy posts. To display
 
 ## Screenshots
 
+<img width="738" height="80" alt="image" src="https://github.com/user-attachments/assets/aa89ed23-dca7-4896-8d5e-584ab22a276e" />
+<img width="911" height="94" alt="image" src="https://github.com/user-attachments/assets/1e5d70a7-d532-4fe0-bbfa-c246ce7ccd43" />
+<img width="628" height="456" alt="image" src="https://github.com/user-attachments/assets/8fcb455a-3faa-47a1-b0b8-85c7db59deb8" />
+<img width="1039" height="464" alt="image" src="https://github.com/user-attachments/assets/687e5b6d-a247-487d-9542-ed4875da32da" />
+<img width="858" height="239" alt="image" src="https://github.com/user-attachments/assets/27784cfc-f6ad-4a8d-8685-67008e5f35db" />
+<img width="879" height="367" alt="image" src="https://github.com/user-attachments/assets/bdd42f7b-79e5-416e-bdb0-10e952844f6a" />
+<img width="493" height="521" alt="image" src="https://github.com/user-attachments/assets/053c0df4-8025-43b1-94b6-2dd9ed9ccf13" />
+
 ## 📝 Specifications
 
 - **PHP Version**: 7.4+ recommended.
