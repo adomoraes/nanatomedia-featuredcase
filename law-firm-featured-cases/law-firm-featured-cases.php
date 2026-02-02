@@ -56,17 +56,39 @@ function lwf_add_featured_case_metaboxes()
 }
 add_action('add_meta_boxes', 'lwf_add_featured_case_metaboxes');
 
+/**
+ * Helper function to provide Case Types
+ * Hardcoded as requested
+ */
+function lwf_get_case_types()
+{
+    return array(
+        'car-accident'   => 'Car Accident',
+        'work-injury'    => 'Work Injury',
+        'medical-mal'    => 'Medical Malpractice',
+        'slip-and-fall'  => 'Slip and Fall',
+        'product-liab'   => 'Product Liability'
+    );
+}
+
 function lwf_render_case_metabox($post)
 {
-    $case_type = get_post_meta($post->ID, '_lwf_case_type', true);
+    $current_type = get_post_meta($post->ID, '_lwf_case_type', true);
     $settlement_amount = get_post_meta($post->ID, '_lwf_settlement_amount', true);
+    $options = lwf_get_case_types();
 
     wp_nonce_field('lwf_save_case_meta', 'lwf_case_nonce');
-
 ?>
     <p>
-        <label for="lwf_case_type"><strong>Case Type:</strong> (e.g. Car Accident)</label>
-        <input type="text" id="lwf_case_type" name="lwf_case_type" value="<?php echo esc_attr($case_type); ?>" class="widefat">
+        <label for="lwf_case_type"><strong>Case Type:</strong></label>
+        <select id="lwf_case_type" name="lwf_case_type" class="widefat">
+            <option value=""><?php _e('Select a case type', 'textdomain'); ?></option>
+            <?php foreach ($options as $value => $label) : ?>
+                <option value="<?php echo esc_attr($value); ?>" <?php selected($current_type, $value); ?>>
+                    <?php echo esc_html($label); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
     </p>
     <p>
         <label for="lwf_settlement_amount"><strong>Settlement Amount:</strong> (e.g. $25,000)</label>
@@ -74,6 +96,41 @@ function lwf_render_case_metabox($post)
     </p>
 <?php
 }
+
+function lwf_save_case_metadata($post_id)
+{
+    // 1. Security check: Nonce verification
+    if (!isset($_POST['lwf_case_nonce']) || !wp_verify_nonce($_POST['lwf_case_nonce'], 'lwf_save_case_meta')) {
+        return;
+    }
+
+    // 2. Prevent autosave from overwriting data
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // 3. Check user permissions
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    // 4. Save Case Type (Select Field)
+    if (isset($_POST['lwf_case_type'])) {
+        $allowed_types = lwf_get_case_types();
+        $selected_type = sanitize_text_field($_POST['lwf_case_type']);
+
+        // Only save if the value exists in our hardcoded options (Validation)
+        if (array_key_exists($selected_type, $allowed_types) || $selected_type === '') {
+            update_post_meta($post_id, '_lwf_case_type', $selected_type);
+        }
+    }
+
+    // 5. Save Settlement Amount (Text Field)
+    if (isset($_POST['lwf_settlement_amount'])) {
+        update_post_meta($post_id, '_lwf_settlement_amount', sanitize_text_field($_POST['lwf_settlement_amount']));
+    }
+}
+add_action('save_post', 'lwf_save_case_metadata');
 
 /**
  * Shortcode to display cases
@@ -88,17 +145,21 @@ function lwf_featured_cases_shortcode()
         'order'          => 'DESC'
     ));
 
+    $case_types = lwf_get_case_types();
     $html = '<div class="featured-cases-container">';
 
     if ($query->have_posts()) {
         while ($query->have_posts()) {
             $query->the_post();
-            $type   = get_post_meta(get_the_ID(), '_lwf_case_type', true);
-            $amount = get_post_meta(get_the_ID(), '_lwf_settlement_amount', true);
+            $type_slug = get_post_meta(get_the_ID(), '_lwf_case_type', true);
+            $amount    = get_post_meta(get_the_ID(), '_lwf_settlement_amount', true);
 
-            $html .= '<article class="case-item" style="border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px;">';
-            $html .= '<h3>' . get_the_title() . '</h3>';
-            $html .= '<p><strong>Type:</strong> ' . esc_html($type) . '<br>';
+            // Get the readable label from our hardcoded array
+            $type_label = isset($case_types[$type_slug]) ? $case_types[$type_slug] : $type_slug;
+
+            $html .= '<article class="case-item" style="border: 1px solid #ddd; margin-bottom: 20px; padding: 15px; border-radius: 5px;">';
+            $html .= '<h3 style="margin-top: 0;">' . get_the_title() . '</h3>';
+            $html .= '<p><strong>Type:</strong> ' . esc_html($type_label) . '<br>';
             $html .= '<strong>Settlement:</strong> ' . esc_html($amount) . '</p>';
             $html .= '</article>';
         }
