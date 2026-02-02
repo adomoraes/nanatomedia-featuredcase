@@ -74,3 +74,40 @@ function lwf_render_case_metabox($post)
     </p>
 <?php
 }
+
+/**
+ * Shortcode to display cases
+ * Usage: [display_featured_cases]
+ */
+function lwf_featured_cases_shortcode()
+{
+    $query = new WP_Query(array(
+        'post_type'      => 'featured_case',
+        'posts_per_page' => 3,
+        'orderby'        => 'date',
+        'order'          => 'DESC'
+    ));
+
+    $html = '<div class="featured-cases-container">';
+
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $type   = get_post_meta(get_the_ID(), '_lwf_case_type', true);
+            $amount = get_post_meta(get_the_ID(), '_lwf_settlement_amount', true);
+
+            $html .= '<article class="case-item" style="border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 10px;">';
+            $html .= '<h3>' . get_the_title() . '</h3>';
+            $html .= '<p><strong>Type:</strong> ' . esc_html($type) . '<br>';
+            $html .= '<strong>Settlement:</strong> ' . esc_html($amount) . '</p>';
+            $html .= '</article>';
+        }
+        wp_reset_postdata();
+    } else {
+        $html .= '<p>No cases found.</p>';
+    }
+
+    $html .= '</div>';
+    return $html;
+}
+add_shortcode('display_featured_cases', 'lwf_featured_cases_shortcode');
