@@ -91,8 +91,10 @@ function lwf_render_case_metabox($post)
         </select>
     </p>
     <p>
-        <label for="lwf_settlement_amount"><strong>Settlement Amount:</strong> (e.g. $25,000)</label>
-        <input type="text" id="lwf_settlement_amount" name="lwf_settlement_amount" value="<?php echo esc_attr($settlement_amount); ?>" class="widefat">
+        <label for="lwf_settlement_amount"><strong>Settlement Amount (USD):</strong></label>
+        <input type="number" id="lwf_settlement_amount" name="lwf_settlement_amount"
+            value="<?php echo esc_attr($settlement_amount); ?>"
+            step="0.01" min="0" class="widefat" placeholder="e.g. 25000">
     </p>
 <?php
 }
@@ -127,7 +129,9 @@ function lwf_save_case_metadata($post_id)
 
     // 5. Save Settlement Amount (Text Field)
     if (isset($_POST['lwf_settlement_amount'])) {
-        update_post_meta($post_id, '_lwf_settlement_amount', sanitize_text_field($_POST['lwf_settlement_amount']));
+        // Sanitize as a float number
+        $amount = filter_var($_POST['lwf_settlement_amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        update_post_meta($post_id, '_lwf_settlement_amount', $amount);
     }
 }
 add_action('save_post', 'lwf_save_case_metadata');
@@ -154,13 +158,16 @@ function lwf_featured_cases_shortcode()
             $type_slug = get_post_meta(get_the_ID(), '_lwf_case_type', true);
             $amount    = get_post_meta(get_the_ID(), '_lwf_settlement_amount', true);
 
+            // Format number to US Standard: $25,000.00
+            $formatted_amount = !empty($amount) ? '$' . number_format((float)$amount, 2, '.', ',') : 'N/A';
+
             // Get the readable label from our hardcoded array
             $type_label = isset($case_types[$type_slug]) ? $case_types[$type_slug] : $type_slug;
 
             $html .= '<article class="case-item" style="border: 1px solid #ddd; margin-bottom: 20px; padding: 15px; border-radius: 5px;">';
             $html .= '<h3 style="margin-top: 0;">' . get_the_title() . '</h3>';
             $html .= '<p><strong>Type:</strong> ' . esc_html($type_label) . '<br>';
-            $html .= '<strong>Settlement:</strong> ' . esc_html($amount) . '</p>';
+            $html .= '<strong>Settlement:</strong> ' . esc_html($formatted_amount) . '</p>';
             $html .= '</article>';
         }
         wp_reset_postdata();
