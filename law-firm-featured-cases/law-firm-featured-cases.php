@@ -179,3 +179,48 @@ function lwf_featured_cases_shortcode()
     return $html;
 }
 add_shortcode('display_featured_cases', 'lwf_featured_cases_shortcode');
+
+/**
+ * Create 3 Dummy Posts on Plugin Activation
+ */
+function lwf_create_dummy_cases()
+{
+    // Array of dummy data
+    $dummy_cases = array(
+        array(
+            'title'      => 'High-Speed Highway Collision',
+            'type'       => 'car-accident',
+            'settlement' => 450000,
+        ),
+        array(
+            'title'      => 'Construction Site Safety Failure',
+            'type'       => 'work-injury',
+            'settlement' => 1250000,
+        ),
+        array(
+            'title'      => 'Pharmacy Prescription Error',
+            'type'       => 'medical-mal',
+            'settlement' => 85000,
+        ),
+    );
+
+    foreach ($dummy_cases as $case) {
+        // Check if a post with this title already exists to avoid duplicates
+        if (!get_page_by_title($case['title'], OBJECT, 'featured_case')) {
+
+            $post_id = wp_insert_post(array(
+                'post_title'   => $case['title'],
+                'post_type'    => 'featured_case',
+                'post_status'  => 'publish',
+                'post_content' => 'Dummy description for ' . $case['title'],
+            ));
+
+            if ($post_id) {
+                update_post_meta($post_id, '_lwf_case_type', $case['type']);
+                update_post_meta($post_id, '_lwf_settlement_amount', $case['settlement']);
+            }
+        }
+    }
+}
+
+register_activation_hook(__FILE__, 'lwf_create_dummy_cases');
