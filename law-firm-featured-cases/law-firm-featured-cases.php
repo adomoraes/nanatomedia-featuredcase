@@ -32,10 +32,45 @@ function lwf_register_featured_case_cpt()
         'public'             => true,
         'has_archive'        => true,
         'menu_icon'          => 'dashicons-awards',
-        'supports'           => array('title'), // Exercise focuses on Title and Custom Fields
-        'show_in_rest'       => true, // Enables Gutenberg editor
+        'supports'           => array('title'),
+        'show_in_rest'       => true,
     );
 
     register_post_type('featured_case', $args);
 }
 add_action('init', 'lwf_register_featured_case_cpt');
+
+/**
+ * Add Meta Boxes for Custom Fields
+ */
+function lwf_add_featured_case_metaboxes()
+{
+    add_meta_box(
+        'lwf_case_details',
+        'Case Details',
+        'lwf_render_case_metabox',
+        'featured_case',
+        'normal',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'lwf_add_featured_case_metaboxes');
+
+function lwf_render_case_metabox($post)
+{
+    $case_type = get_post_meta($post->ID, '_lwf_case_type', true);
+    $settlement_amount = get_post_meta($post->ID, '_lwf_settlement_amount', true);
+
+    wp_nonce_field('lwf_save_case_meta', 'lwf_case_nonce');
+
+?>
+    <p>
+        <label for="lwf_case_type"><strong>Case Type:</strong> (e.g. Car Accident)</label>
+        <input type="text" id="lwf_case_type" name="lwf_case_type" value="<?php echo esc_attr($case_type); ?>" class="widefat">
+    </p>
+    <p>
+        <label for="lwf_settlement_amount"><strong>Settlement Amount:</strong> (e.g. $25,000)</label>
+        <input type="text" id="lwf_settlement_amount" name="lwf_settlement_amount" value="<?php echo esc_attr($settlement_amount); ?>" class="widefat">
+    </p>
+<?php
+}
